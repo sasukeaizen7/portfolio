@@ -1,0 +1,90 @@
+# Kafka (KRaft, no ZooKeeper) + topics + Postgres + producer + 2 consumers + Kafka UI.
+#   docker compose up -d --build                 then http://localhost:8082 (Kafka UI)
+#   docker compose logs -f consumer               batches, duplicates ignored, messages sent to the DLQ
+#   docker compose stop consumer-2                watch partitions move to the remaining consumer
+#   psql postgresql://de:de@localhost:5435/de -c "SELECT * FROM clicks.minute_counts ORDER BY minute DESC LIMIT 8"
+x-app: &app
+  build: .
+  environment: &app-env
+    KAFKA_BOOTSTRAP: kafka:9092
+    PG_DSN: postgresql://de:de@postgres:5432/de
+
+services:
+  kafka:
+    image: apache/kafka:4.3.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,EXTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"        # topics are created explicitly, with their partitions
+    ports:
+      - "127.0.0.1:29092:29092"                        # from the host: KAFKA_BOOTSTRAP=localhost:29092
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null"]
+      interval: 5s
+      retries: 30
+
+  kafka-init:
+    image: apache/kafka:4.3.1
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic clicks --partitions 3 --replication-factor 1 --config retention.ms=604800000
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic clicks.dlq --partitions 1 --replication-factor 1
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --describe
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: de
+      POSTGRES_PASSWORD: de
+      POSTGRES_DB: de
+    ports:
+      - "127.0.0.1:5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U de -d de"]
+      interval: 2s
+      retries: 30
+
+  producer:
+    <<: *app
+    command: ["python", "-m", "stream.producer", "--rate", "200"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+
+  consumer:
+    <<: *app
+    command: ["python", "-m", "stream.consumer"]
+    depends_on: &consumer-deps
+      kafka-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+
+  consumer-2:                                          # same group id: Kafka splits the 3 partitions
+    <<: *app
+    command: ["python", "-m", "stream.consumer"]
+    depends_on: *consumer-deps
+
+  kafka-ui:
+    image: kafbat/kafka-ui:v1.5.0
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "127.0.0.1:8082:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
