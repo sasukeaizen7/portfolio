@@ -1,0 +1,14 @@
+version: 2
+
+exposures:
+  - name: sales_dashboard
+    label: Monthly sales dashboard
+    type: dashboard
+    maturity: medium
+    description: The KPIs a sales manager checks every Monday. The lineage graph shows which models it depends on.
+    depends_on:
+      - ref('mart_monthly_revenue')
+      - ref('mart_customer_rfm')
+      - ref('mart_cohort_retention')
+    owner:
+      name: Data engineering

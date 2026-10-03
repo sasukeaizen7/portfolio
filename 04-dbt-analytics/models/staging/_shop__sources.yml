@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: shop
+    description: Raw layer written by Project 1 (03-project-1-ingestion), one row per source invoice line.
+    schema: raw
+    loaded_at_field: loaded_at
+    freshness:                               # `dbt source freshness`: is Project 1 still loading?
+      warn_after: {count: 2, period: day}
+      error_after: {count: 7, period: day}
+    tables:
+      - name: sales_lines
+        description: Every invoice line exactly as received, plus the batch that loaded it.
+        columns:
+          - name: line_id
+            description: Position of the line in the source workbook; stable across re-runs.
+            data_tests: [unique, not_null]
+          - name: batch_date
+            data_tests: [not_null]
+          - name: invoice
+            description: Invoice number; a leading C marks a cancellation.
+            data_tests: [not_null]
+          - name: country
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: ref('country_regions')
+                    field: country

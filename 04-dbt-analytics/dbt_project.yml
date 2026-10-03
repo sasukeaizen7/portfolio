@@ -1,0 +1,37 @@
+name: shop_analytics
+version: "1.0.0"
+config-version: 2
+profile: shop_analytics
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  shop_analytics:
+    staging:
+      +schema: dbt_staging
+      +materialized: view          # thin renames: always fresh, no storage
+    intermediate:
+      +schema: dbt_intermediate
+      +materialized: table
+    marts:
+      +schema: dbt_marts
+      +materialized: table
+
+seeds:
+  shop_analytics:
+    +schema: dbt_seeds
+
+snapshots:
+  shop_analytics:
+    +target_schema: dbt_snapshots
+
+vars:
+  # Incremental runs re-process this many days before the latest loaded batch, so a re-run batch in
+  # Project 1 (late corrections) is picked up again.
+  lookback_days: 3

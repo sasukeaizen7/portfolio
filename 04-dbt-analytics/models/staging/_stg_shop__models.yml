@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_shop__sales_lines
+    description: Source invoice lines, renamed and flagged. Same grain as the source.
+    columns:
+      - name: sales_line_id
+        data_tests: [unique, not_null]
+      - name: revenue
+        description: quantity × unit_price, rounded to pence (negative for cancellations).
+      - name: line_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['sale', 'cancellation', 'stock_adjustment']

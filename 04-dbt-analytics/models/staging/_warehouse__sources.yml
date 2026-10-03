@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: warehouse
+    description: Project 1's hand-written star schema, used only to cross-check the dbt models.
+    schema: dw
+    tables:
+      - name: dim_customer
+      - name: dim_country
+      - name: fact_sales

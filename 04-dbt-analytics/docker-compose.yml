@@ -1,0 +1,11 @@
+# Runs dbt against the warehouse of Project 1 (start it first: cd ../03-project-1-ingestion && docker compose up -d).
+#   docker compose run --rm dbt                      -> dbt build (models + tests + snapshot + seed)
+#   docker compose run --rm dbt docs generate --profiles-dir .
+services:
+  dbt:
+    build: .
+    environment:
+      PG_HOST: host.docker.internal     # the Postgres published by Project 1 on the host's port 5435
+      PG_PORT: "5435"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

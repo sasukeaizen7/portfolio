@@ -1,0 +1,11 @@
+snapshots:
+  - name: snap_customers
+    description: >
+      dbt's built-in SCD 2: each `dbt snapshot` run compares every customer's latest country with the
+      stored version and closes/opens versions on change. It only sees changes BETWEEN runs, so it
+      complements int_customer_country_versions (rebuilt from the full history) for changes going forward.
+    relation: ref('int_latest_customer_country')
+    config:
+      unique_key: customer_id
+      strategy: check
+      check_cols: [country]

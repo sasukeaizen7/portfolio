@@ -1,0 +1,12 @@
+# Some images build from the repository root: keep the context small.
+.venv/
+.tools/
+.pgdata/
+.scratch/
+**/data/
+**/__pycache__/
+**/.pytest_cache/
+**/target/
+**/dbt_packages/
+**/logs/
+.git/

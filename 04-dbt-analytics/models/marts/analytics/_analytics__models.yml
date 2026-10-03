@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: mart_monthly_revenue
+    description: Monthly gross sales, cancellations, net revenue, orders and active customers by region.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [month, region]
+    columns:
+      - name: net_revenue
+        data_tests:
+          - sums_match:
+              arguments:
+                compare_model: ref('fct_sales')
+                compare_column: revenue
+
+  - name: mart_customer_rfm
+    description: One row per identified customer with positive net revenue, with RFM scores and segment.
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: segment
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Champions', 'Loyal', 'New / promising', 'At risk', 'Lost', 'Need attention']
+
+  - name: mart_cohort_retention
+    description: Retention of monthly acquisition cohorts, N months after the first purchase.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [cohort_month, months_since_first]
+    columns:
+      - name: retention_pct
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 100
+
+unit_tests:
+  - name: rfm_segments_follow_the_rules
+    description: Five one-order customers -> tied frequency gets one shared score; segments follow the macro.
+    model: mart_customer_rfm
+    given:
+      - input: ref('fct_sales')
+        rows:
+          - {customer_id: 1, invoice_no: "1", invoiced_at: "2011-01-01 10:00:00", revenue: 10, line_type: sale}
+          - {customer_id: 2, invoice_no: "2", invoiced_at: "2011-02-01 10:00:00", revenue: 20, line_type: sale}
+          - {customer_id: 3, invoice_no: "3", invoiced_at: "2011-03-01 10:00:00", revenue: 30, line_type: sale}
+          - {customer_id: 4, invoice_no: "4", invoiced_at: "2011-04-01 10:00:00", revenue: 40, line_type: sale}
+          - {customer_id: 5, invoice_no: "5", invoiced_at: "2011-05-01 10:00:00", revenue: 50, line_type: sale}
+    expect:
+      rows:
+        - {customer_id: 1, recency_score: 1, frequency_score: 1, monetary_score: 1, segment: Lost}
+        - {customer_id: 2, recency_score: 2, frequency_score: 1, monetary_score: 2, segment: Lost}
+        - {customer_id: 3, recency_score: 3, frequency_score: 1, monetary_score: 3, segment: Need attention}
+        - {customer_id: 4, recency_score: 4, frequency_score: 1, monetary_score: 4, segment: New / promising}
+        - {customer_id: 5, recency_score: 5, frequency_score: 1, monetary_score: 5, segment: New / promising}

@@ -1,0 +1,105 @@
+version: 2
+
+models:
+  - name: fct_sales
+    description: >
+      Sales fact, one row per invoice line (rejected lines excluded), incremental by batch.
+      The contract fixes column names and types: a model change that breaks them fails the build
+      instead of silently breaking dashboards.
+    config:
+      contract: {enforced: true}
+    constraints:
+      - type: primary_key
+        columns: [sales_line_id]
+    columns:
+      - name: sales_line_id
+        data_type: bigint
+        constraints: [{type: not_null}]
+        data_tests: [unique, not_null]
+      - name: invoice_no
+        data_type: text
+        constraints: [{type: not_null}]
+      - name: date_key
+        data_type: int
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: customer_version_key
+        data_type: text
+        description: NULL for guest checkouts.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_version_key
+      - name: customer_id
+        data_type: int
+      - name: stock_code
+        data_type: text
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: stock_code
+      - name: country
+        data_type: text
+      - name: invoiced_at
+        data_type: timestamp
+      - name: batch_date
+        data_type: date
+      - name: quantity
+        data_type: int
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<> 0"
+      - name: unit_price
+        data_type: numeric(10,2)
+      - name: revenue
+        data_type: numeric(12,2)
+        description: Net line revenue in GBP; negative for cancellations.
+        data_tests:
+          - sums_match:
+              arguments:
+                compare_model: ref('stg_shop__sales_lines')
+                compare_column: revenue
+                compare_where: not is_rejected
+      - name: line_type
+        data_type: text
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['sale', 'cancellation', 'stock_adjustment']
+      - name: is_guest
+        data_type: boolean
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "line_type <> 'sale' or quantity > 0"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "is_guest = (customer_version_key is null)"
+
+  - name: dim_customers
+    description: Customer versions (SCD 2) with region, flattened for BI.
+    columns:
+      - name: customer_version_key
+        data_tests: [unique, not_null]
+      - name: region
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['United Kingdom', 'Europe', 'Rest of world', 'Unknown']
+
+  - name: dim_products
+    columns:
+      - name: stock_code
+        data_tests: [unique, not_null]
+
+  - name: dim_date
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]

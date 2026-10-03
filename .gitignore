@@ -1,0 +1,20 @@
+# Local environments and data (every project re-downloads or regenerates its data)
+.venv/
+.tools/
+.pgdata/
+.scratch/
+**/data/
+__pycache__/
+.pytest_cache/
+# dbt
+**/target/
+**/dbt_packages/
+**/logs/
+**/package-lock.yml
+# Airflow / Spark / Terraform local state
+**/airflow-logs/
+**/spark-warehouse/
+**/metastore_db/
+**/.terraform/
+**/*.tfstate*
+.env

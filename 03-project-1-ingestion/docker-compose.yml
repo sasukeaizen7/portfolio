@@ -1,0 +1,33 @@
+# docker compose up --build                          -> full backfill (604 trading days, ~2 min)
+# docker compose run --rm ingest run --date 2011-11-03   -> one day
+# The warehouse stays up on localhost:5435 for the dbt project (04) and for exploring with psql.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: de
+      POSTGRES_PASSWORD: de
+      POSTGRES_DB: de
+    ports:
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U de -d de"]
+      interval: 2s
+      retries: 30
+
+  ingest:
+    build:
+      context: ..
+      dockerfile: 03-project-1-ingestion/Dockerfile
+    environment:
+      PG_DSN: postgresql://de:de@postgres:5432/de
+    volumes:
+      - ./data:/app/data          # the downloaded workbook and the Parquet feed are cached here
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

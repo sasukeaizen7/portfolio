@@ -1,0 +1,44 @@
+country,region,iso_code
+United Kingdom,United Kingdom,GB
+EIRE,Europe,IE
+Channel Islands,Europe,
+Austria,Europe,AT
+Belgium,Europe,BE
+Cyprus,Europe,CY
+Czech Republic,Europe,CZ
+Denmark,Europe,DK
+European Community,Europe,
+Finland,Europe,FI
+France,Europe,FR
+Germany,Europe,DE
+Greece,Europe,GR
+Iceland,Europe,IS
+Italy,Europe,IT
+Lithuania,Europe,LT
+Malta,Europe,MT
+Netherlands,Europe,NL
+Norway,Europe,NO
+Poland,Europe,PL
+Portugal,Europe,PT
+Spain,Europe,ES
+Sweden,Europe,SE
+Switzerland,Europe,CH
+Australia,Rest of world,AU
+Bahrain,Rest of world,BH
+Brazil,Rest of world,BR
+Canada,Rest of world,CA
+Hong Kong,Rest of world,HK
+Israel,Rest of world,IL
+Japan,Rest of world,JP
+Korea,Rest of world,KR
+Lebanon,Rest of world,LB
+Nigeria,Rest of world,NG
+RSA,Rest of world,ZA
+Saudi Arabia,Rest of world,SA
+Singapore,Rest of world,SG
+Thailand,Rest of world,TH
+USA,Rest of world,US
+United Arab Emirates,Rest of world,AE
+Bermuda,Rest of world,BM
+West Indies,Rest of world,
+Unspecified,Unknown,

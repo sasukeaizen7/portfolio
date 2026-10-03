@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: int_customer_country_versions
+    description: SCD 2 history of customer country, derived from the full sales history with gaps-and-islands.
+    columns:
+      - name: customer_version_key
+        data_tests: [unique, not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [customer_id, valid_from]
+  - name: int_invoices
+    description: One row per invoice.
+    columns:
+      - name: invoice_no
+        data_tests: [unique, not_null]
+
+unit_tests:
+  - name: country_change_opens_a_new_version
+    description: France -> France -> Germany -> France gives 3 versions, closed the day before the next.
+    model: int_customer_country_versions
+    given:
+      - input: ref('stg_shop__sales_lines')
+        rows:
+          - {sales_line_id: 1, customer_id: 7, invoice_date: 2011-01-01, invoiced_at: 2011-01-01 10:00:00, country: France}
+          - {sales_line_id: 2, customer_id: 7, invoice_date: 2011-01-05, invoiced_at: 2011-01-05 10:00:00, country: France}
+          - {sales_line_id: 3, customer_id: 7, invoice_date: 2011-02-01, invoiced_at: 2011-02-01 10:00:00, country: Germany}
+          - {sales_line_id: 4, customer_id: 7, invoice_date: 2011-03-01, invoiced_at: 2011-03-01 10:00:00, country: France}
+          - {sales_line_id: 5, customer_id: null, invoice_date: 2011-03-01, invoiced_at: 2011-03-01 11:00:00, country: France}
+    expect:
+      rows:
+        - {customer_id: 7, version_number: 1, country: France, valid_from: 2011-01-01, valid_to: 2011-01-31, is_current: false}
+        - {customer_id: 7, version_number: 2, country: Germany, valid_from: 2011-02-01, valid_to: 2011-02-28, is_current: false}
+        - {customer_id: 7, version_number: 3, country: France, valid_from: 2011-03-01, valid_to: 9999-12-31, is_current: true}

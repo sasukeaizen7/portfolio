@@ -1,0 +1,30 @@
+# docker compose up --build        -> runs the ETL once against a fresh Postgres, then exits
+# docker compose run --rm etl --start 2024-01-01 --end 2024-12-31 --postgres     (a backfill)
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: de
+      POSTGRES_PASSWORD: de
+      POSTGRES_DB: de
+    ports:
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:                       # the ETL waits until Postgres really accepts connections
+      test: ["CMD-SHELL", "pg_isready -U de -d de"]
+      interval: 2s
+      retries: 30
+
+  etl:
+    build: .
+    environment:
+      PG_DSN: postgresql://de:de@postgres:5432/de   # service name, not localhost, inside the network
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
