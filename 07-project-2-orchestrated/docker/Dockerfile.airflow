@@ -1,0 +1,15 @@
+# Airflow 3 + what this project's tasks need: Java 17 and PySpark (Spark runs in local mode inside the
+# task), the Spark provider (SparkSubmitOperator), and dbt in its own virtualenv so its dependencies
+# never conflict with Airflow's.
+FROM apache/airflow:3.3.2-python3.12
+
+USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openjdk-17-jre-headless \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+USER airflow
+RUN pip install --no-cache-dir "apache-airflow==3.3.2" pyspark==4.2.0 apache-airflow-providers-apache-spark pyarrow==21.0.0 \
+ && python -m venv /opt/airflow/dbt-venv \
+ && /opt/airflow/dbt-venv/bin/pip install --no-cache-dir dbt-core==1.12.5 dbt-postgres==1.11.0

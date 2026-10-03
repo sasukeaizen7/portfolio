@@ -1,0 +1,24 @@
+version: 2
+models:
+  - name: mart_monthly_funnel
+    description: Monthly calls and conversion by channel, with interest-rate context.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [contact_month, channel]}
+    columns:
+      - name: calls
+        data_tests:
+          - sums_to_source_rows
+  - name: mart_contact_fatigue
+    columns:
+      - name: calls_in_campaign
+        data_tests: [unique, not_null]
+  - name: mart_segment_lift
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [dimension, segment]}
+    columns:
+      - name: lift
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments: {min_value: 0}

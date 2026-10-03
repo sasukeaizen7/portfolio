@@ -1,0 +1,16 @@
+version: 2
+models:
+  - name: stg_contacts
+    columns:
+      - name: contact_id
+        data_tests: [unique, not_null]
+      - name: channel
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['cellular', 'telephone']}
+      - name: contacts_this_campaign
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments: {min_value: 1}
+      - name: contact_month
+        data_tests: [not_null]

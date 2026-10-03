@@ -1,0 +1,42 @@
+# Local mode (one container, all cores):
+#   docker compose run --rm spark python -m jobs.download            # 6 months of NYC taxi trips (~300 MB)
+#   docker compose run --rm spark python -m jobs.clean_trips
+#   docker compose run --rm spark python -m jobs.zone_analytics
+#   docker compose run --rm spark python -m jobs.performance_lab
+#   docker compose run --rm spark pytest -q
+# Standalone cluster (1 master + 2 workers, UI on http://localhost:8081):
+#   docker compose --profile cluster up -d
+#   docker compose run --rm -e SPARK_MASTER=spark://spark-master:7077 spark python -m jobs.zone_analytics
+x-spark: &spark
+  build: .
+  volumes:
+    - ./data:/app/data
+    - ./results:/app/results
+    - ./jobs:/app/jobs
+    - ./tests:/app/tests
+
+services:
+  spark:
+    <<: *spark
+    environment:
+      SPARK_MASTER: ${SPARK_MASTER:-local[*]}
+    ports:
+      - "127.0.0.1:4040:4040"           # the Spark UI of the running job
+
+  spark-master:
+    <<: *spark
+    profiles: [cluster]
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    ports:
+      - "127.0.0.1:8081:8080"
+
+  spark-worker:
+    <<: *spark
+    profiles: [cluster]
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
+    environment:
+      SPARK_WORKER_CORES: "2"
+      SPARK_WORKER_MEMORY: 2g
+    deploy:
+      replicas: 2
+    depends_on: [spark-master]

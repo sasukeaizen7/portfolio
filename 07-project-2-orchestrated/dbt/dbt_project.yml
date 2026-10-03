@@ -1,0 +1,12 @@
+name: marketing
+version: "1.0.0"
+config-version: 2
+profile: marketing
+models:
+  marketing:
+    staging:
+      +materialized: view
+      +schema: marketing_staging
+    marts:
+      +materialized: table
+      +schema: marketing_marts
