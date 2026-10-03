@@ -1,0 +1,81 @@
+# Airflow 3 with the LocalExecutor: one Postgres (Airflow metadata + a "warehouse" database),
+# the API server (UI on http://localhost:8080), the scheduler and the DAG processor.
+#   docker compose up -d          then open http://localhost:8080 (dev mode: no login)
+#   docker compose down -v        removes everything, including the databases
+x-airflow: &airflow
+  image: apache/airflow:3.3.2-python3.12
+  environment: &airflow-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+    # Airflow 3: workers report task state to the API server, not to the database directly.
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+    # Shared by every component to sign the tokens they exchange (any long string; dev value here).
+    AIRFLOW__API_AUTH__JWT_SECRET: de100-portfolio-dev-only-jwt-secret-change-me
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"      # local dev: no login screen
+    AIRFLOW_CONN_WAREHOUSE: postgresql://de:de@postgres:5432/warehouse
+    PYTHONPATH: /opt/airflow/include
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./include:/opt/airflow/include
+    - ./sql:/opt/airflow/sql
+    - ./data:/opt/airflow/data
+    - airflow-logs:/opt/airflow/logs
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "127.0.0.1:5435:5432"       # the warehouse database: postgresql://de:de@localhost:5435/warehouse
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/create-warehouse.sql:/docker-entrypoint-initdb.d/create-warehouse.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 2s
+      retries: 30
+
+  airflow-init:
+    <<: *airflow
+    entrypoint: /bin/bash
+    command: ["-c", "airflow db migrate"]
+    restart: "no"
+
+  airflow-apiserver:
+    <<: *airflow
+    command: api-server
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 10s
+      retries: 20
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    <<: *airflow
+    command: dag-processor
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
+  airflow-logs:
