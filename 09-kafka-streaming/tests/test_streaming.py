@@ -1,13 +1,12 @@
 import json
 import os
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
-
 from stream.events import ClickGenerator, InvalidEvent, parse
 
-NOW = datetime(2026, 10, 3, 12, 0, 30, tzinfo=timezone.utc)
+NOW = datetime(2026, 10, 3, 12, 0, 30, tzinfo=UTC)
 
 
 def test_generator_is_deterministic_and_keyed_by_user():
@@ -44,7 +43,6 @@ def test_invalid_events_are_rejected(raw, message):
 @pytest.mark.skipif(not os.environ.get("PG_DSN"), reason="needs a Postgres in $PG_DSN")
 def test_sink_is_exactly_once_under_duplicates_and_replays():
     import psycopg
-
     from stream.sink import ensure_schema, write_batch
 
     with psycopg.connect(os.environ["PG_DSN"]) as conn:

@@ -3,9 +3,8 @@
 import pytest
 
 pyspark = pytest.importorskip("pyspark")
-from pyspark.sql import SparkSession  # noqa: E402
-
 from campaign_transforms import add_features, derive_contact_month, quality_issues, snake_case_columns  # noqa: E402
+from pyspark.sql import SparkSession  # noqa: E402
 
 
 @pytest.fixture(scope="module")

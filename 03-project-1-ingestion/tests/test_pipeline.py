@@ -5,7 +5,6 @@ from datetime import date, datetime
 
 import psycopg
 import pytest
-
 from ingest import pipeline
 
 ADMIN_DSN = os.environ.get("PG_DSN")

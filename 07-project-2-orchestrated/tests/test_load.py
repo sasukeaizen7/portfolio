@@ -2,7 +2,6 @@ import os
 
 import pandas as pd
 import pytest
-
 from marketing import COLUMNS, load_parquet_to_postgres
 
 pytestmark = pytest.mark.skipif(not os.environ.get("PG_DSN"), reason="needs a Postgres in $PG_DSN")

@@ -46,7 +46,6 @@ def stock_prices():
     def api_available() -> PokeReturnValue:
         """Wait (without holding a worker slot) until the price API answers."""
         import requests
-
         from stock_pipeline.prices import CHART_URL, HEADERS
 
         try:

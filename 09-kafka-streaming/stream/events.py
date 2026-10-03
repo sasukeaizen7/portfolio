@@ -6,7 +6,7 @@ import json
 import random
 import uuid
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 EVENT_TYPES = ("page_view", "product_view", "add_to_cart", "purchase")
 PRODUCTS = {f"P{i:03d}": round(random.Random(i).uniform(5, 120), 2) for i in range(1, 51)}
@@ -89,7 +89,7 @@ class ClickGenerator:
     def batch(self, n: int, now: datetime | None = None) -> list[tuple[str, bytes]]:
         """n messages as (key, value). The key is the user id: all of a user's events land in the same
         partition, so they stay in order for that user."""
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         out: list[tuple[str, bytes]] = []
         for _ in range(n):
             if self.rng.random() < self.malformed_rate:

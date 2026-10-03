@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -78,7 +78,7 @@ def parse_chart(payload: dict, symbol: str) -> list[PriceRow]:
         if any(v is None for v in values):
             continue
         o, h, lo, c, a, v = values
-        row = PriceRow(symbol, datetime.fromtimestamp(ts, timezone.utc).astimezone(tz).date(),
+        row = PriceRow(symbol, datetime.fromtimestamp(ts, UTC).astimezone(tz).date(),
                        round(o, 4), round(h, 4), round(lo, 4), round(c, 4), round(a, 4), int(v))
         validate(row)
         rows.append(row)

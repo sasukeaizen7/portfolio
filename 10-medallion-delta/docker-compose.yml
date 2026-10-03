@@ -1,0 +1,11 @@
+#   docker compose run --rm delta python -m medallion.run_all       # land -> bronze -> silver -> gold, 3 days
+#   docker compose run --rm delta python -m medallion.time_travel   # history, time travel, OPTIMIZE, VACUUM
+#   docker compose run --rm delta pytest -q
+services:
+  delta:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./medallion:/app/medallion
+      - ./tests:/app/tests
+      - ../09-kafka-streaming/stream:/app/stream:ro      # reuses the click-event generator of project 09

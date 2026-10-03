@@ -1,0 +1,2 @@
+delta-spark==4.4.0
+pytest==8.4.2

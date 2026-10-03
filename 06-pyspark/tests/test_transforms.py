@@ -1,9 +1,16 @@
 from datetime import datetime
 
+from jobs.transforms import (
+    add_salt,
+    explode_salt,
+    quality_verdict,
+    revenue_by_zone_month,
+    tip_rate_by_distance,
+    to_clean_trips,
+    top_n_per_group,
+    unify,
+)
 from pyspark.sql import Row
-
-from jobs.transforms import (explode_salt, add_salt, quality_verdict, revenue_by_zone_month, tip_rate_by_distance,
-                             to_clean_trips, top_n_per_group, unify)
 
 
 def raw_trip(pickup="2024-01-10 08:00", dropoff="2024-01-10 08:20", distance=2.0, fare=12.0, total=15.0,

@@ -2,7 +2,6 @@ import os
 
 import pandas as pd
 import pytest
-
 from etl.extract import CITIES
 from etl.load import upsert_postgres, write_parquet
 from etl.transform import to_frame

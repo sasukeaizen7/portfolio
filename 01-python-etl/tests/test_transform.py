@@ -1,7 +1,6 @@
 import copy
 
 import pytest
-
 from etl.extract import CITIES
 from etl.transform import SCHEMA, ValidationError, to_frame
 

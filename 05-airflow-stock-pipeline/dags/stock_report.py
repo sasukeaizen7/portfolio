@@ -11,6 +11,7 @@ from datetime import datetime
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.sdk import Asset, dag
 
+
 @dag(
     schedule=[Asset("postgres://warehouse/stocks/daily_prices")],
     start_date=datetime(2026, 1, 1),

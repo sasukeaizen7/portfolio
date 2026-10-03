@@ -6,7 +6,7 @@ that is all a data catalog is, a shared answer to "which tables exist, where, wi
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from .s3 import CLEAN_BUCKET, client, duckdb_connection
 
@@ -16,7 +16,7 @@ TABLES = {"citibike_trips": "citibike/trips/"}       # table name -> prefix in t
 
 def crawl(s3=None, con=None) -> dict:
     s3, con = s3 or client(), con or duckdb_connection()
-    catalog = {"crawled_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "tables": {}}
+    catalog = {"crawled_at": datetime.now(UTC).isoformat(timespec="seconds"), "tables": {}}
     for table, prefix in TABLES.items():
         keys = [o["Key"] for page in s3.get_paginator("list_objects_v2").paginate(Bucket=CLEAN_BUCKET, Prefix=prefix)
                 for o in page.get("Contents", []) if o["Key"].endswith(".parquet")]

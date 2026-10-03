@@ -2,7 +2,6 @@ from datetime import date
 
 import pytest
 import requests
-
 from etl.extract import CITIES, ExtractError, fetch_daily_weather
 
 

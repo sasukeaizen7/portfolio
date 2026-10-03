@@ -5,7 +5,6 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-
 from stock_pipeline.prices import PriceDataError, parse_chart, run_quality_checks, upsert
 
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "aapl_2025-01-01_08.json").read_text(encoding="utf-8"))

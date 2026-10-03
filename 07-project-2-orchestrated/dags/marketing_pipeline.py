@@ -48,7 +48,6 @@ def marketing_pipeline():
     @task
     def load_warehouse() -> int:
         from airflow.providers.postgres.hooks.postgres import PostgresHook
-
         from marketing import load_parquet_to_postgres
 
         conn = PostgresHook(postgres_conn_id="warehouse").get_conn()

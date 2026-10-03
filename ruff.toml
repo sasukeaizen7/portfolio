@@ -1,0 +1,7 @@
+line-length = 120
+target-version = "py312"
+extend-exclude = [".venv", ".tools", ".scratch", "**/dbt_packages"]
+
+[lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]          # long SQL strings and comments are fine

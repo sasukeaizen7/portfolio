@@ -13,7 +13,7 @@ from .s3 import CLEAN_BUCKET, RAW_BUCKET, RESULTS_BUCKET, client
 
 def main() -> None:
     s3 = client(os.environ["ADMIN_ACCESS_KEY"], os.environ["ADMIN_SECRET_KEY"])
-    for attempt in range(60):
+    for _attempt in range(60):
         try:
             existing = {b["Name"] for b in s3.list_buckets().get("Buckets", [])}
             break
