@@ -1,0 +1,14 @@
+version: 2
+models:
+  - name: stg_velib__station_status
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [snapshot_id, station_id]}
+  - name: stg_velib__stations
+    columns:
+      - name: station_id
+        data_tests: [unique, not_null]
+      - name: capacity
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments: {min_value: 0, max_value: 500}     # event megastations have ~410 docks

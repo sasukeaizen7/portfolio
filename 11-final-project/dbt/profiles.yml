@@ -1,0 +1,12 @@
+velib:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PG_HOST', 'localhost') }}"
+      port: "{{ env_var('PG_PORT', '5435') | int }}"
+      user: "{{ env_var('PG_USER', 'de') }}"
+      password: "{{ env_var('PG_PASSWORD', 'de') }}"
+      dbname: "{{ env_var('PG_DB', 'warehouse') }}"
+      schema: velib
+      threads: 4

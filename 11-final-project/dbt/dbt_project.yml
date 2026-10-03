@@ -1,0 +1,12 @@
+name: velib
+version: "1.0.0"
+config-version: 2
+profile: velib
+models:
+  velib:
+    staging:
+      +materialized: view
+      +schema: velib_staging
+    marts:
+      +materialized: table
+      +schema: velib_marts

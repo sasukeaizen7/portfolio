@@ -1,0 +1,5 @@
+# Airflow 3 + boto3 (S3 raw zone) + dbt in its own virtualenv (no dependency clashes with Airflow).
+FROM apache/airflow:3.3.2-python3.12
+RUN pip install --no-cache-dir "apache-airflow==3.3.2" boto3==1.43.108 \
+ && python -m venv /opt/airflow/dbt-venv \
+ && /opt/airflow/dbt-venv/bin/pip install --no-cache-dir dbt-core==1.12.5 dbt-postgres==1.11.0

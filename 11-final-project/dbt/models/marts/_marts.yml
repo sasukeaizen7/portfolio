@@ -1,0 +1,44 @@
+version: 2
+models:
+  - name: fct_station_snapshots
+    description: One row per station per snapshot (incremental).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [snapshot_id, station_id]}
+    columns:
+      - name: station_id
+        data_tests:
+          - relationships:
+              arguments: {to: ref('stg_velib__stations'), field: station_id}
+      - name: fill_pct
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments: {min_value: 0, max_value: 100}
+  - name: mart_network_timeseries
+    columns:
+      - name: taken_at
+        data_tests: [unique, not_null]
+  - name: mart_station_reliability
+    columns:
+      - name: station_id
+        data_tests: [unique, not_null]
+  - name: mart_latest_status
+    columns:
+      - name: station_id
+        data_tests: [unique]
+
+unit_tests:
+  - name: empty_episodes_are_islands_of_consecutive_snapshots
+    description: Empty at snapshots 1 and 2, not at 3, empty again at 4 -> two episodes (2 snapshots, then 1).
+    model: mart_empty_episodes
+    given:
+      - input: ref('fct_station_snapshots')
+        rows:
+          - {station_id: 7, taken_at: "2026-10-03 10:00:00+00", is_operating: true, is_empty: true}
+          - {station_id: 7, taken_at: "2026-10-03 10:05:00+00", is_operating: true, is_empty: true}
+          - {station_id: 7, taken_at: "2026-10-03 10:10:00+00", is_operating: true, is_empty: false}
+          - {station_id: 7, taken_at: "2026-10-03 10:15:00+00", is_operating: true, is_empty: true}
+    expect:
+      rows:
+        - {station_id: 7, snapshots: 2, minutes_observed_empty: 5}
+        - {station_id: 7, snapshots: 1, minutes_observed_empty: 0}

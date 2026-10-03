@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         project: [01-python-etl, 02-data-modeling, 03-project-1-ingestion, 05-airflow-stock-pipeline,
-                  07-project-2-orchestrated, 08-data-lake, 09-kafka-streaming]
+                  07-project-2-orchestrated, 08-data-lake, 09-kafka-streaming, 11-final-project]
     services:
       postgres:
         image: postgres:17
@@ -99,7 +99,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r 04-dbt-analytics/requirements.txt -r 03-project-1-ingestion/requirements.txt
+      - run: pip install -r 04-dbt-analytics/requirements.txt -r 03-project-1-ingestion/requirements.txt boto3==1.43.108
       - name: Create Project 1's (empty) warehouse, the source of the dbt project
         working-directory: 03-project-1-ingestion
         run: python -m ingest.pipeline setup
@@ -108,6 +108,28 @@ jobs:
         run: |
           dbt deps --profiles-dir .
           dbt build --profiles-dir .
+      - name: Create the (empty) raw tables of projects 07 and 11
+        run: |
+          python - <<'PY'
+          import sys, psycopg
+          sys.path[:0] = ["11-final-project/include", "07-project-2-orchestrated/include"]
+          from velib import monitoring, warehouse
+          import marketing
+          with psycopg.connect("postgresql://de:de@localhost:5435/de") as c:
+              warehouse.ensure_schema(c)
+              monitoring.ensure_schema(c)
+              for statement in marketing.DDL.split(";"):
+                  if statement.strip():
+                      c.execute(statement)
+          PY
+      - name: dbt build, project 07 (marketing)
+        working-directory: 07-project-2-orchestrated/dbt
+        env: {PG_DB: de}
+        run: dbt deps --profiles-dir . && dbt build --profiles-dir .
+      - name: dbt build, project 11 (Vélib')
+        working-directory: 11-final-project/dbt
+        env: {PG_DB: de}
+        run: dbt deps --profiles-dir . && dbt build --profiles-dir .
 
   terraform:
     runs-on: ubuntu-latest
@@ -122,6 +144,9 @@ jobs:
       - run: terraform fmt -check -recursive
       - run: terraform init -backend=false
       - run: terraform validate
+      - name: Final project's Terraform (reuses the module above)
+        working-directory: 11-final-project/infra
+        run: terraform fmt -check && terraform init -backend=false && terraform validate
 
   compose-files:
     runs-on: ubuntu-latest

@@ -1,0 +1,21 @@
+version: 2
+sources:
+  - name: raw
+    description: Loaded from the S3 raw zone by the velib_ingest DAG.
+    tables:
+      - name: velib_snapshots
+        description: One row per loaded snapshot (the load log).
+        loaded_at_field: taken_at
+        freshness:                                   # dbt source freshness: is ingestion still running?
+          warn_after: {count: 30, period: minute}
+          error_after: {count: 2, period: hour}
+        columns:
+          - name: snapshot_id
+            data_tests: [unique, not_null]
+      - name: velib_station_status
+        description: Live counts per station per snapshot.
+      - name: velib_station_information
+        description: Station name, position and capacity (latest known).
+        columns:
+          - name: station_id
+            data_tests: [unique, not_null]

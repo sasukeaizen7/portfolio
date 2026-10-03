@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "pipeline",
+      "credentials": [{"accessKey": "pipeline", "secretKey": "pipeline-secret-123"}],
+      "actions": ["Admin", "Read", "List", "Write", "Tagging"]
+    }
+  ]
+}
