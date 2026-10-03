@@ -1,0 +1,21 @@
+{
+  "identities": [
+    {
+      "name": "admin",
+      "credentials": [{"accessKey": "admin", "secretKey": "admin-secret-123"}],
+      "actions": ["Admin", "Read", "List", "Tagging", "Write"]
+    },
+    {
+      "name": "pipeline",
+      "credentials": [{"accessKey": "pipeline", "secretKey": "pipeline-secret-123"}],
+      "actions": ["Read:lake-raw", "Write:lake-raw", "List:lake-raw",
+                  "Read:lake-clean", "Write:lake-clean", "List:lake-clean"]
+    },
+    {
+      "name": "analyst",
+      "credentials": [{"accessKey": "analyst", "secretKey": "analyst-secret-123"}],
+      "actions": ["Read:lake-clean", "List:lake-clean",
+                  "Read:lake-results", "Write:lake-results", "List:lake-results"]
+    }
+  ]
+}

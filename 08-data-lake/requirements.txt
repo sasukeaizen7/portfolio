@@ -1,0 +1,4 @@
+boto3==1.43.108
+duckdb==1.4.1
+pandas==2.3.3
+requests==2.32.5
