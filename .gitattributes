@@ -1,0 +1,4 @@
+# Linux containers run these files: keep LF line endings on every platform.
+* text=auto eol=lf
+*.png binary
+*.parquet binary
