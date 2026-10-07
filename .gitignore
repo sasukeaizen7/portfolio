@@ -19,3 +19,4 @@ __pycache__/
 **/*.tfstate*
 .env
 **/.user.yml
+**/tfplan
