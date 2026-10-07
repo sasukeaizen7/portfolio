@@ -20,8 +20,8 @@ def land_day(day: str, events: int = 20_000, seed: int | None = None, add_device
     written = 0
     for hour in range(24):                                     # one file per hour, like a real export
         lines = []
-        for _, value in gen.batch(events // 24, start + timedelta(hours=hour, minutes=30)):
-            if add_device and value.startswith(b"{\""):
+        for key, value in gen.batch(events // 24, start + timedelta(hours=hour, minutes=30)):
+            if add_device and key != "bad":                    # malformed lines stay as they are, for the quarantine
                 record = json.loads(value)
                 record["device"] = "mobile" if int(record["event_id"], 16) % 3 else "desktop"   # ~2/3 mobile
                 value = json.dumps(record).encode()
